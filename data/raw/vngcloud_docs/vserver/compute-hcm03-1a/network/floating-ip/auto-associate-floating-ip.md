@@ -1,0 +1,2 @@
+# Auto associate floating IP
+

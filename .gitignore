@@ -1,0 +1,8 @@
+# Ignore environment variables
+.env
+
+.venv
+
+### VS Code ###
+.vscode/
+/data/raw/vngcloud_docs/.gitbook/
