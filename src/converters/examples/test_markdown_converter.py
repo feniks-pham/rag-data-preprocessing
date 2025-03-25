@@ -1,6 +1,11 @@
 from pathlib import Path
 from src.converters.markdown_to_pdf_converter import MarkdownToPDFConverter
 
+def convert_one_file():
+    input_file = Path(__file__).parent / 'test.md'
+    output_file = Path(__file__).parent / 'test.pdf'
+    converter = MarkdownToPDFConverter()
+    converter.convert_to_pdf(input_file, output_file)
 
 def main():
     # Khởi tạo converter
@@ -28,4 +33,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main() 
+    # main() 
+    convert_one_file()
