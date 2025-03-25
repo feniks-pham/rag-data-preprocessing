@@ -8,26 +8,26 @@ def convert_one_file():
     converter.convert_to_pdf(input_file, output_file)
 
 def main():
-    # Khởi tạo converter
+    # Initialize converter
     converter = MarkdownToPDFConverter()
     
-    # Đường dẫn đến thư mục chứa các file markdown
+    # Path to directory containing markdown files
     input_dir = Path(__file__).parent / 'input_dir'
     
-    # Đường dẫn để lưu các file PDF
+    # Path to save PDF files
     output_dir = Path(__file__).parent / 'output_dir'
     
-    # Lấy danh sách tất cả các file markdown trong thư mục input
+    # Get list of all markdown files in input directory
     markdown_files = list(input_dir.glob('**/*.md'))
     
     if not markdown_files:
-        print("Không tìm thấy file markdown nào trong thư mục input_dir")
+        print("No markdown files found in input_dir")
         return
     
-    # Thực hiện chuyển đổi hàng loạt
+    # Perform batch conversion
     output_files = converter.convert_batch(markdown_files, output_dir)
     
-    print(f"Đã chuyển đổi {len(output_files)} file markdown thành PDF:")
+    print(f"Converted {len(output_files)} markdown files to PDF:")
     for output_file in output_files:
         print(f"- {output_file}")
 

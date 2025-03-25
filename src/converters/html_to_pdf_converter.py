@@ -170,7 +170,7 @@ class HTMLToPDFConverter(BaseConverter):
             p {
                 margin: 1em 0;
             }
-            /* Thêm CSS cho bảng responsive */
+            /* Responsive table styles for small screens */
             @media screen and (max-width: 600px) {
                 table {
                     display: block;
@@ -193,13 +193,13 @@ class HTMLToPDFConverter(BaseConverter):
             local_path = self._download_resource(url, resource_dir)
             script['src'] = local_path
         
-        # Process images
+        # Process images and add alt text
         for img in soup.find_all('img'):
             if img.get('src'):
                 url = urljoin(img['src'], img['src'])
                 local_path = self._download_resource(url, resource_dir)
                 img['src'] = local_path
-                # Add alt text if missing
+                # Add alt text if missing for accessibility
                 if not img.get('alt'):
                     img['alt'] = 'Image'
         
@@ -221,17 +221,17 @@ class HTMLToPDFConverter(BaseConverter):
         if not input_path.exists():
             raise FileNotFoundError(f"Input file not found: {input_path}")
         
-        # Create resource directory
+        # Create resource directory for downloaded assets
         resource_dir = input_path.parent / 'resources'
         resource_dir.mkdir(exist_ok=True)
         
-        # Read and process HTML
+        # Read and process HTML content
         with open(input_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
         
         processed_html = self._process_html(html_content, resource_dir)
         
-        # Save processed HTML
+        # Save processed HTML for debugging
         processed_html_path = input_path.parent / 'processed.html'
         with open(processed_html_path, 'w', encoding='utf-8') as f:
             f.write(processed_html)
