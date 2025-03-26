@@ -66,6 +66,6 @@ if __name__ == '__main__':
     print("-" * 50)
     test_preprocessed_retriever(input_file)
     
-    # print("\nTesting Direct PDF Retriever:")
-    # print("-" * 50)
-    # test_direct_retriever(input_file)
+    print("\nTesting Direct PDF Retriever:")
+    print("-" * 50)
+    test_direct_retriever(input_file)

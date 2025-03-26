@@ -99,17 +99,44 @@ class PDFPreprocessor:
             bool: True if conversion was successful, False otherwise
         """
         try:
-            subprocess.run([
+            # Create output directory if it doesn't exist
+            output_dir = Path('output_dir')
+            output_dir.mkdir(exist_ok=True)
+            
+            process = subprocess.run([
                 "docling", str(pdf_path),
                 "--from", "pdf",
                 "--to", "md",
                 "--output", 'output_dir',
                 "--ocr",
                 "--table-mode", "accurate"
-            ], shell=False, check=True)
-            return True
+            ], shell=False, check=True, timeout=300,  # 5 minutes timeout
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            
+            # Find the generated markdown file
+            pdf_name = Path(pdf_path).stem
+            generated_file = output_dir / f"{pdf_name}.md"
+            
+            if not generated_file.exists():
+                print(f"❌ Docling did not generate the expected file: {generated_file}")
+                return False
+                
+            # Move the file to the desired location
+            try:
+                import shutil
+                shutil.move(str(generated_file), str(output_md_path))
+                print(f"✅ Moved generated file from {generated_file} to {output_md_path}")
+                return True
+            except Exception as e:
+                print(f"❌ Error moving generated file: {e}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            print(f"⏰ Docling conversion timed out after 5 minutes")
+            return False
         except subprocess.CalledProcessError as e:
             print(f"❌ Error using docling: {e}")
+            print("⚠️ STDERR:", e.stderr)
             return False
         except Exception as e:
             print(f"❌ Unexpected error during markdown conversion: {e}")
@@ -129,13 +156,14 @@ class PDFPreprocessor:
         try:
             result = subprocess.run(
                 ["markitdown", str(pdf_path), "-o", str(output_txt_path)],
-                shell=False, check=True,
+                shell=False, check=True, timeout=300,  # 5 minutes timeout
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
             )
             print("✅ Successfully converted PDF to plain text.")
-            print("📜 STDOUT:", result.stdout)
-            print("⚠️ STDERR:", result.stderr)
             return True
+        except subprocess.TimeoutExpired:
+            print(f"⏰ Markitdown conversion timed out after 5 minutes")
+            return False
         except subprocess.CalledProcessError as e:
             print(f"❌ Error running markitdown: {e}")
             print("⚠️ STDERR:", e.stderr)
@@ -160,27 +188,37 @@ class PDFPreprocessor:
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
         
-        if self._is_text_pdf(pdf_path):
-            if self._is_encoded_text(pdf_path):
-                print(f"🔍 {pdf_path.name} contains encoded text → Converting to plain text using markitdown.")
-                success = self._convert_pdf_to_plain_text(pdf_path, output_md)
+        try:
+            if self._is_text_pdf(pdf_path):
+                if self._is_encoded_text(pdf_path):
+                    print(f"🔍 {pdf_path.name} contains encoded text → Converting to plain text using markitdown.")
+                    success = self._convert_pdf_to_plain_text(pdf_path, output_md)
+                else:
+                    print(f"✅ {pdf_path.name} contains valid text → Converting to Markdown using docling.")
+                    success = self._convert_pdf_to_markdown(pdf_path, output_md)
             else:
-                print(f"✅ {pdf_path.name} contains valid text → Converting to Markdown using docling.")
-                success = self._convert_pdf_to_markdown(pdf_path, output_md)
-        else:
-            print(f"📷 {pdf_path.name} is image-based → Using OCR to extract text.")
-            extracted_text = self._extract_text_with_ocr(pdf_path)
-            try:
-                output_md.write_text(extracted_text, encoding='utf-8')
-                success = True
-            except Exception as e:
-                print(f"❌ Error saving OCR text: {e}")
-                success = False
-        
-        if success and output_md.exists():
-            return output_md
-        else:
-            raise RuntimeError(f"Failed to process PDF file: {pdf_path}")
+                print(f"📷 {pdf_path.name} is image-based → Using OCR to extract text.")
+                extracted_text = self._extract_text_with_ocr(pdf_path)
+                try:
+                    output_md.write_text(extracted_text, encoding='utf-8')
+                    success = True
+                except Exception as e:
+                    print(f"❌ Error saving OCR text: {e}")
+                    success = False
+            
+            if success and output_md.exists():
+                if output_md.stat().st_size == 0:
+                    print(f"❌ Generated markdown file is empty: {output_md}")
+                    return None
+                return output_md
+            else:
+                print(f"❌ Failed to generate markdown file: {output_md}")
+                return None
+        except Exception as e:
+            print(f"❌ Error processing PDF file {pdf_path}: {str(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+            return None
 
     def process_directory(self, input_dir: Union[str, Path], output_dir: Union[str, Path] = None) -> List[Path]:
         """
