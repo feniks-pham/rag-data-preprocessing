@@ -1,7 +1,8 @@
 from abc import ABC
-from pathlib import Path
-from typing import Union, List
+from typing import Union
+
 from docling.document_converter import DocumentConverter
+from pathlib import Path
 
 from src.converters.base_converter import BaseConverter
 

@@ -24,6 +24,8 @@ def load_env_vars(env_path: str = None) -> Dict[str, str]:
     
     # Get required variables
     required_vars = [
+        'LLM_MODEL',
+        'EMBEDDING_MODEL',
         'GOOGLE_API_KEY',
         'POSTGRES_USER',
         'POSTGRES_PASSWORD',
